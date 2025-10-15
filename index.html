@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>행사장 지도</title>
 <style>
-  /* body: 화면 가로/세로 중앙 정렬 */
+  /* body: 화면 가로/세로 중앙 정렬, 좌우 여백 제거 */
   body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -14,15 +14,15 @@
     justify-content: center;  /* 가로 중앙 */
     align-items: center;      /* 세로 중앙 */
     min-height: 100vh;        /* 화면 전체 높이 */
-    padding: 10px;            /* 모바일 여백 */
+    padding: 0;               /* 좌우 여백 제거 */
     box-sizing: border-box;
   }
 
-  /* 지도 컨테이너 */
+  /* 지도 컨테이너: 화면 폭 가득 차도록 */
   .map-container {
     position: relative;
-    width: 100%;
-    max-width: 1400px;
+    width: 100%;              /* 화면 전체 폭 */
+    max-width: 100%;          /* 최대 폭 제한 제거 */
     height: auto;
   }
 
@@ -41,7 +41,7 @@
     cursor: pointer;
   }
 
-  /* 공통 팝업 스타일 */
+  /* 팝업 스타일 */
   .popup {
     position: fixed;
     top: 0; left: 0;
