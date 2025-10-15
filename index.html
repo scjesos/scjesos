@@ -1,54 +1,95 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>행사장 지도</title>
-  <style>
-    /* 전체 body 설정: 화면 가로/세로 중앙 정렬 */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>행사장 지도</title>
+<style>
+  /* body: 화면 가로/세로 중앙 정렬 */
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    display: flex;
+    justify-content: center;  /* 가로 중앙 */
+    align-items: center;      /* 세로 중앙 */
+    min-height: 100vh;        /* 화면 전체 높이 */
+    padding: 10px;            /* 모바일 여백 */
+    box-sizing: border-box;
+  }
 
-      display: flex;
-      justify-content: center;  /* 가로 중앙 */
-      align-items: center;      /* 세로 중앙 */
-      min-height: 100vh;        /* 화면 전체 높이 */
-      padding: 10px;            /* 모바일 여백 확보 */
-      box-sizing: border-box;
-    }
+  /* 지도 컨테이너 */
+  .map-container {
+    position: relative;
+    width: 100%;
+    max-width: 1400px;
+    height: auto;
+  }
 
-    /* 지도 컨테이너 */
-    .map-container {
-      position: relative;
-      width: 100%;
-      max-width: 1400px;
-      height: auto;             /* 세로 비율 유지 */
-    }
+  .map-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+  }
 
-    .map-container img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 6px;
-    }
+  /* 클릭 영역 */
+  .hotspot {
+    position: absolute;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
 
-    /* 클릭 영역 */
-    .hotspot {
-      position: absolute;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-    }
-  </style>
+  /* 공통 팝업 스타일 */
+  .popup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  .popup-content {
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    max-width:90%;
+    max-height:85%;
+    text-align:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    overflow:auto;
+  }
+  .popup-content img {
+    width:100%;
+    height:auto;
+    border-radius:6px;
+  }
+  .popup-content p {
+    font-size:16px;
+    margin-top:10px;
+  }
+  .close-btn {
+    margin-top:10px;
+    padding:6px 14px;
+    background:#333;
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+  }
+</style>
 </head>
 <body>
 
 <div class="map-container">
   <img src="map.png" alt="행사장 지도">
 
-  <!-- 클릭 영역 예시 -->
+  <!-- 클릭 영역 -->
   <div class="hotspot" data-name="콩이관" style="top:25.9%; left:34.3%; width:4.4%; height:4.7%;"></div>
   <div class="hotspot" data-name="홍메관" style="top:54.0%; left:46.6%; width:3.5%; height:10%;"></div>
   <div class="hotspot" data-name="다년생 식물원" style="top:36.5%; left:33.5%; width:3.0%; height:5.5%;"></div>
@@ -59,12 +100,102 @@
 </div>
 
 <script>
-  document.querySelectorAll(".hotspot").forEach(h => {
-    h.addEventListener("click", () => {
-      const name = h.dataset.name;
-      alert(name + "을(를) 클릭했습니다!");
-    });
+const images = {
+  "콩이관": ["콩이관1.jpg","콩이관2.jpg","콩이관3.jpg","콩이관4.jpg"],
+  "홍메관": ["홍메관1.jpg","홍메관2.jpg","홍메관3.jpg"],
+  "다년생 식물원": ["다년생식물원1.jpg","다년생식물원2.jpg","다년생식물원3.jpg"],
+  "효모관": ["효모관1.jpg","효모관2.jpg","효모관3.jpg"],
+  "콩이공원": ["콩이공원1.jpg"],
+  "팡이공원": ["팡이공원1.jpg","팡이공원2.jpg"],
+  "팡이관": ["팡이관1.jpg"]
+};
+
+const descs = {
+  "콩이관": [
+    "콩이관 입구: 장애인 전용 길 배치",
+    "실내에 장애인 전용 화장실 배치",
+    "실내에 장애인 전용 엘리베이터 배치",
+    "실내 내부 모습: 지체 장애인을 위한 휠체어가 구비되어 있으며 지체 장애인 모두 시설 이용가능"
+  ],
+  "홍메관": [
+    "(위 건물이 테라포밍관) 테라포밍관은 놀이기구 이용이 어려울 수 있음",
+    "출입구 휠체어로 이용 가능",
+    "출입구 입장 후 좌측에 장애인 전용 화장실"
+  ],
+  "다년생 식물원": [
+    "수목원 내부에 엘리베이터가 설치되어 있어 휠체어로 통행이 편하다",
+    "수목원 내부 1층 왼쪽에 장애인 화장실이 마련되어 있다",
+    "수목원 내부에 1층 왼쪽에 장애인 화장실이 마련되어 있다"
+  ],
+  "효모관": [
+    "고정문 옆 점자 안내도",
+    "입장 후 왼쪽 엘리베이터 설치",
+    "고정문 후 자동문 있음"
+  ],
+  "콩이공원": [
+    "공원 안쪽 길이 포장되어 있지 않아서 비가 오면 땅이 질퍽해져 이동하기 불편함"
+  ],
+  "팡이공원": [
+    "길이 좁고 울퉁불퉁해서 휠체어를 타고 올라가기 어려움",
+    "펜스가 없는 부분이 있어 위험함"
+  ],
+  "팡이관": [
+    "1번 출입구 입장 후 오른쪽에 엘리베이터"
+  ]
+};
+
+// 개별 팝업
+function showPopup(name) {
+  let idx = 0;
+  const popup = document.createElement("div");
+  popup.className = "popup";
+  popup.innerHTML = `
+    <div class="popup-content">
+      <img src="${images[name][idx]}" alt="${name}">
+      <p>${descs[name][idx]}</p>
+      <button class="close-btn">닫기</button>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  const imgEl = popup.querySelector("img");
+  const textEl = popup.querySelector("p");
+  const closeBtn = popup.querySelector(".close-btn");
+
+  imgEl.addEventListener("click", () => {
+    idx++;
+    if (idx < images[name].length) {
+      imgEl.src = images[name][idx];
+      textEl.textContent = descs[name][idx];
+    }
   });
+
+  closeBtn.addEventListener("click", () => popup.remove());
+}
+
+// 클릭 영역 이벤트 연결
+document.querySelectorAll(".hotspot").forEach(h => {
+  h.addEventListener("click", () => {
+    showPopup(h.dataset.name);
+  });
+});
+
+// 자동 안내 팝업
+window.addEventListener("load", () => {
+  const notice = document.createElement("div");
+  notice.className = "popup";
+  notice.innerHTML = `
+    <div class="popup-content">
+      <h2>BF 인증 안내</h2>
+      <p>장애인, 노약자, 임산부 등 사회적 약자가<br>
+         시설을 안전하고 편하게 이용할 수 있도록<br>
+         보장하는 인증 제도입니다.</p>
+      <button class="close-btn">확인</button>
+    </div>
+  `;
+  document.body.appendChild(notice);
+  notice.querySelector(".close-btn").addEventListener("click", () => notice.remove());
+});
 </script>
 
 </body>
