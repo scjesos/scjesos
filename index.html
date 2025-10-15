@@ -5,24 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>행사장 지도</title>
 <style>
-  /* body: 화면 가로/세로 중앙 정렬, 좌우 여백 제거 */
   body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f9f9f9;
     display: flex;
-    justify-content: center;  /* 가로 중앙 */
-    align-items: center;      /* 세로 중앙 */
-    min-height: 100vh;        /* 화면 전체 높이 */
-    padding: 0;               /* 좌우 여백 제거 */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0;
     box-sizing: border-box;
   }
 
-  /* 지도 컨테이너: 화면 폭 가득 차도록 */
   .map-container {
     position: relative;
-    width: 100%;              /* 화면 전체 폭 */
-    max-width: 100%;          /* 최대 폭 제한 제거 */
+    width: 100%;
+    max-width: 100%;
     height: auto;
   }
 
@@ -33,11 +31,10 @@
     border-radius: 6px;
   }
 
-  /* 클릭 영역 */
   .hotspot {
     position: absolute;
-    background: transparent;
-    border: none;
+    background: transparent; /* 클릭 영역 안보이게 */
+    border: none;            /* 테두리 제거 */
     cursor: pointer;
   }
 
@@ -89,7 +86,6 @@
 <div class="map-container">
   <img src="map.png" alt="행사장 지도">
 
-  <!-- 클릭 영역 -->
   <div class="hotspot" data-name="콩이관" style="top:25.9%; left:34.3%; width:4.4%; height:4.7%;"></div>
   <div class="hotspot" data-name="홍메관" style="top:54.0%; left:46.6%; width:3.5%; height:10%;"></div>
   <div class="hotspot" data-name="다년생 식물원" style="top:36.5%; left:33.5%; width:3.0%; height:5.5%;"></div>
@@ -144,7 +140,6 @@ const descs = {
   ]
 };
 
-// 개별 팝업
 function showPopup(name) {
   let idx = 0;
   const popup = document.createElement("div");
@@ -173,11 +168,8 @@ function showPopup(name) {
   closeBtn.addEventListener("click", () => popup.remove());
 }
 
-// 클릭 영역 이벤트 연결
 document.querySelectorAll(".hotspot").forEach(h => {
-  h.addEventListener("click", () => {
-    showPopup(h.dataset.name);
-  });
+  h.addEventListener("click", () => showPopup(h.dataset.name));
 });
 
 // 자동 안내 팝업
