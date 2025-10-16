@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>행사장 지도</title>
+<title>행사장 지도 — 화살표 작동 수정본</title>
 <style>
   body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f9f9f9;
-    overflow: hidden;
     height: 100vh;
+    overflow: hidden;
   }
 
   /* 지도 전체 스크롤/확대용 컨테이너 */
@@ -19,7 +19,6 @@
     height: 100%;
     overflow: auto;
     touch-action: pan-x pan-y pinch-zoom;
-    -ms-touch-action: pan-x pan-y pinch-zoom;
   }
 
   .map-container {
@@ -28,104 +27,81 @@
     height: auto;
   }
 
-  .map-container img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
+  .map-container img { width: 100%; height: auto; display: block; }
 
-  .hotspot {
-    position: absolute;
-    cursor: pointer;
-  }
+  .hotspot { position: absolute; cursor: pointer; }
 
-  /* 팝업 */
+  /* 팝업 오버레이 (항상 화면 기준) */
   .popup {
-    position: fixed; /* 지도 확대와 무관하게 화면 고정 */
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
     background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     z-index: 9999;
   }
 
   .popup-content {
     position: relative;
-    background: white;
-    padding: 20px;
+    background: #fff;
+    padding: 18px 16px;
     border-radius: 12px;
+    width: 420px;
+    max-width: 92%;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     text-align: center;
-    max-width: 90%;
-    width: 380px; /* 고정된 팝업 크기 */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transform: none !important;
+    overflow: visible; /* 화살표가 잘리지 않도록 */
   }
 
+  /* 이미지: 팝업 내부에서만 크기 고정 (팝업 외부의 줌 영향 없음) */
   .popup-content img {
     width: 100%;
     height: auto;
-    border-radius: 6px;
-    pointer-events: none;
+    display: block;
+    border-radius: 8px;
     user-select: none;
-    touch-action: none;
+    pointer-events: none; /* 이미지 자체는 클릭 차단 */
   }
 
-  .popup-content p {
-    font-size: 14px;
-    margin-top: 10px;
+  .popup-content p { margin: 12px 0 0; font-size: 14px; color:#222; }
+
+  .close-btn {
+    display:inline-block;
+    margin-top:12px;
+    padding:8px 14px;
+    background:#333; color:#fff; border:none; border-radius:6px;
+    cursor:pointer;
   }
 
+  /* 화살표 버튼 (팝업 콘텐츠 내부에 배치) */
   .arrow-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: #ffffffd0;
-    border: none;
+    width: 38px; height: 38px;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    font-size: 20px;
+    border: none;
+    background: rgba(0,0,0,0.06);
     cursor: pointer;
-    user-select: none;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .arrow-btn.left {
-    left: -50px;
-  }
+  .arrow-btn:active { transform: translateY(-50%) scale(0.98); }
 
-  .arrow-btn.right {
-    right: -50px;
-  }
+  .arrow-left { left: -18px; } /* 내부에 보이도록 작게 옮김 */
+  .arrow-right { right: -18px; }
 
-  .arrow-btn.disabled {
-    opacity: 0.4;
+  .arrow-btn[disabled] {
+    opacity: 0.35;
     cursor: not-allowed;
   }
 
-  .close-btn {
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: #333;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-
-  /* 첫 팝업 전용 스타일 */
-  .popup-content h2 {
-    font-size: 14px; /* 2 줄임 */
-    margin-bottom: 10px;
-  }
-
-  .popup-content p.intro {
-    font-size: 12px; /* 2 줄임 */
-  }
+  /* 안내 팝업용 스타일 (별도) */
+  .intro-title { font-size: 16px; margin: 0 0 8px; }
+  .intro-text { font-size: 13px; color:#333; line-height:1.4; margin:0; }
 </style>
 </head>
 <body>
@@ -191,74 +167,93 @@ const descs = {
 
 function showPopup(name) {
   let idx = 0;
-  const popup = document.createElement("div");
-  popup.className = "popup";
-  popup.innerHTML = `
-    <div class="popup-content">
-      <button class="arrow-btn left">&#9664;</button>
-      <img src="${images[name][idx]}" alt="${name}">
-      <button class="arrow-btn right">&#9654;</button>
-      <p>${descs[name][idx]}</p>
-      <button class="close-btn">닫기</button>
-    </div>
-  `;
+
+  // 팝업 구조를 DOM API로 생성 (내부 요소 참조가 명확)
+  const popup = document.createElement('div');
+  popup.className = 'popup';
+
+  const content = document.createElement('div');
+  content.className = 'popup-content';
+
+  const imgEl = document.createElement('img');
+  imgEl.src = images[name][idx];
+  imgEl.alt = name;
+
+  const textEl = document.createElement('p');
+  textEl.textContent = descs[name][idx];
+
+  const leftBtn = document.createElement('button');
+  leftBtn.className = 'arrow-btn arrow-left';
+  leftBtn.innerHTML = '&#9664;'; // ◀
+  leftBtn.setAttribute('aria-label','이전');
+
+  const rightBtn = document.createElement('button');
+  rightBtn.className = 'arrow-btn arrow-right';
+  rightBtn.innerHTML = '&#9654;'; // ▶
+  rightBtn.setAttribute('aria-label','다음');
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-btn';
+  closeBtn.textContent = '닫기';
+
+  // append order (화살표는 content 내부에 있으므로 클릭 가능)
+  content.appendChild(leftBtn);
+  content.appendChild(imgEl);
+  content.appendChild(rightBtn);
+  content.appendChild(textEl);
+  content.appendChild(closeBtn);
+  popup.appendChild(content);
   document.body.appendChild(popup);
 
-  const imgEl = popup.querySelector("img");
-  const textEl = popup.querySelector("p");
-  const closeBtn = popup.querySelector(".close-btn");
-  const leftBtn = popup.querySelector(".arrow-btn.left");
-  const rightBtn = popup.querySelector(".arrow-btn.right");
+  // 업데이트 함수
+  function update() {
+    imgEl.src = images[name][idx];
+    textEl.textContent = descs[name][idx];
+    leftBtn.disabled = (idx === 0);
+    rightBtn.disabled = (idx === images[name].length - 1);
 
-  function updateArrows() {
-    leftBtn.classList.toggle("disabled", idx === 0);
-    rightBtn.classList.toggle("disabled", idx === images[name].length - 1);
+    // 시각적 변화 (disabled 스타일은 CSS로 처리)
+    if (leftBtn.disabled) leftBtn.classList.add('disabled'); else leftBtn.classList.remove('disabled');
+    if (rightBtn.disabled) rightBtn.classList.add('disabled'); else rightBtn.classList.remove('disabled');
   }
 
-  leftBtn.addEventListener("click", () => {
-    if (idx > 0) {
-      idx--;
-      imgEl.src = images[name][idx];
-      textEl.textContent = descs[name][idx];
-      updateArrows();
-    }
+  leftBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (idx > 0) { idx--; update(); }
   });
 
-  rightBtn.addEventListener("click", () => {
-    if (idx < images[name].length - 1) {
-      idx++;
-      imgEl.src = images[name][idx];
-      textEl.textContent = descs[name][idx];
-      updateArrows();
-    }
+  rightBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (idx < images[name].length - 1) { idx++; update(); }
   });
 
-  closeBtn.addEventListener("click", () => popup.remove());
-  updateArrows();
+  closeBtn.addEventListener('click', () => popup.remove());
+  // 오버레이 바깥 클릭으로 닫기
+  popup.addEventListener('click', (ev) => { if (ev.target === popup) popup.remove(); });
+
+  update();
 }
 
-// 핫스팟 클릭 이벤트
-document.querySelectorAll(".hotspot").forEach(h => {
-  h.addEventListener("click", () => {
-    showPopup(h.dataset.name);
-  });
+// 핫스팟 클릭 이벤트 등록
+document.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', () => showPopup(h.dataset.name));
 });
 
-// 자동 안내 팝업
-window.addEventListener("load", () => {
-  const notice = document.createElement("div");
-  notice.className = "popup";
+// 자동 안내 팝업 (처음 로드 시)
+window.addEventListener('load', () => {
+  const notice = document.createElement('div');
+  notice.className = 'popup';
   notice.innerHTML = `
     <div class="popup-content">
-      <h2>장류마을 테마파크는 BF인증 시설입니다.</h2>
-      <p class="intro">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
+      <h2 class="intro-title">장류마을 테마파크는 BF인증 시설입니다.</h2>
+      <p class="intro-text">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
          시설을 안전하고 편리하게 이용할 수 있도록<br>
          보장하는 제도입니다.</p>
       <button class="close-btn">확인</button>
     </div>
   `;
   document.body.appendChild(notice);
-  notice.querySelector(".close-btn").addEventListener("click", () => notice.remove());
+  notice.querySelector('.close-btn').addEventListener('click', () => notice.remove());
 });
 </script>
 </body>
