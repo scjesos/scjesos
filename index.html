@@ -37,7 +37,6 @@
     cursor: pointer;
   }
 
-  /* 팝업 */
   .popup {
     position: fixed;
     top: 0;
@@ -63,6 +62,7 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     overflow: hidden;
     font-size: 14px;
+    position: relative;
   }
 
   .popup-content h2 {
@@ -86,7 +86,7 @@
 
   .close-btn {
     margin-top: 10px;
-    padding: 6px 12px;
+    padding: 10px 16px;
     background: #333;
     color: #fff;
     border: none;
@@ -95,7 +95,7 @@
     font-size: 14px;
   }
 
-  /* 이미지 슬라이드 화살표 */
+  /* 화살표 버튼 */
   .arrow-btn {
     position: absolute;
     top: 50%;
@@ -103,16 +103,31 @@
     background: rgba(0,0,0,0.5);
     color: #fff;
     border: none;
-    padding: 10px 14px;
+    padding: 20px;
     cursor: pointer;
-    border-radius: 4px;
-    font-size: 20px;
+    border-radius: 50%;
+    font-size: 24px;
     user-select: none;
     z-index: 10;
   }
-  .arrow-btn:active { background: rgba(0,0,0,0.7); }
-  .prev-btn { left: 10px; }
-  .next-btn { right: 10px; }
+
+  .arrow-btn:disabled {
+    background: rgba(150,150,150,0.5);
+    cursor: default;
+  }
+
+  .prev-btn { left: -40px; }   /* 이미지 바깥쪽으로 이동 */
+  .next-btn { right: -40px; }  /* 이미지 바깥쪽으로 이동 */
+
+  /* 모바일 터치 시 클릭 영역 확대 */
+  @media (max-width: 600px) {
+    .arrow-btn {
+      padding: 28px;
+      font-size: 32px;
+    }
+    .prev-btn { left: -50px; }
+    .next-btn { right: -50px; }
+  }
 </style>
 </head>
 <body>
@@ -202,19 +217,20 @@ function showPopup(name) {
   function updatePopup() {
     imgEl.src = images[name][idx];
     textEl.textContent = descs[name][idx];
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === images[name].length - 1;
   }
 
   prevBtn.addEventListener("click", () => {
-    idx = (idx - 1 + images[name].length) % images[name].length;
-    updatePopup();
+    if (idx > 0) { idx--; updatePopup(); }
   });
 
   nextBtn.addEventListener("click", () => {
-    idx = (idx + 1) % images[name].length;
-    updatePopup();
+    if (idx < images[name].length - 1) { idx++; updatePopup(); }
   });
 
   closeBtn.addEventListener("click", () => popup.remove());
+  updatePopup();
 }
 
 document.querySelectorAll(".hotspot").forEach(h => {
@@ -227,7 +243,7 @@ window.addEventListener("load", () => {
   notice.className = "popup";
   notice.innerHTML = `
     <div class="popup-content">
-      <h2>장류마을 테마파크는 BF인증 시설입니다.</h2>
+      <h2>장류마을 테마파크 시설 대부분은 BF인증 시설입니다.</h2>
       <p>BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
          시설을 안전하고 편리하게 이용할 수 있도록<br>
          보장하는 제도입니다.</p>
