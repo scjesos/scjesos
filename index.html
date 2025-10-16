@@ -40,7 +40,7 @@
 
   /* 팝업 */
   .popup {
-    position: fixed; /* 지도 확대와 무관하게 고정 */
+    position: fixed; /* 지도 확대와 무관 */
     top: 0;
     left: 0;
     width: 100%;
@@ -55,22 +55,21 @@
   }
 
   .popup-content {
-    position: relative;
+    position: fixed; /* 화면 기준 고정 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px; /* 크기 고정 */
+    max-width: 90%;
+    max-height: 85%;
     background: #fff;
     padding: 20px;
     border-radius: 16px;
     text-align: center;
-    width: 400px; /* 고정 폭 */
-    max-width: 90%;
-    max-height: 85%;
-    overflow: hidden;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    overflow: hidden;
     font-size: 14px;
-  }
-
-  .popup-content h2 {
-    font-size: 14px; /* 제목 글자 작게 */
-    margin-bottom: 10px;
+    z-index: 9999;
   }
 
   .popup-content img {
@@ -85,7 +84,12 @@
     margin-top: 10px;
   }
 
-  .close-btn {
+  .popup-content h2 {
+    font-size: 14px; /* 제목 크기 조절 */
+    margin-bottom: 10px;
+  }
+
+  .close-btn, .nav-btn {
     margin-top: 10px;
     padding: 6px 12px;
     background: #333;
@@ -96,25 +100,14 @@
     font-size: 14px;
   }
 
-  /* 이전/다음 버튼 */
-  .arrow-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 24px;
-    color: #888;
-    background: rgba(255,255,255,0.7);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
+  .nav-btn {
+    margin: 5px;
   }
 
-  .arrow-left { left: 10px; }
-  .arrow-right { right: 10px; }
-
-  .arrow-disabled { color: #ccc; cursor: default; }
+  .nav-disabled {
+    background: #999 !important;
+    cursor: default;
+  }
 </style>
 </head>
 <body>
@@ -184,11 +177,13 @@ function showPopup(name) {
   popup.className = "popup";
   popup.innerHTML = `
     <div class="popup-content">
-      <span class="close-btn">닫기</span>
       <img src="${images[name][idx]}" alt="${name}">
       <p>${descs[name][idx]}</p>
-      <button class="arrow-btn arrow-left arrow-disabled">&#8592;</button>
-      <button class="arrow-btn arrow-right ${images[name].length === 1 ? 'arrow-disabled' : ''}">&#8594;</button>
+      <div>
+        <button class="nav-btn nav-left">◀</button>
+        <button class="nav-btn nav-right">▶</button>
+      </div>
+      <button class="close-btn">닫기</button>
     </div>
   `;
   document.body.appendChild(popup);
@@ -196,22 +191,22 @@ function showPopup(name) {
   const imgEl = popup.querySelector("img");
   const textEl = popup.querySelector("p");
   const closeBtn = popup.querySelector(".close-btn");
-  const leftBtn = popup.querySelector(".arrow-left");
-  const rightBtn = popup.querySelector(".arrow-right");
+  const leftBtn = popup.querySelector(".nav-left");
+  const rightBtn = popup.querySelector(".nav-right");
 
-  function updateButtons() {
-    leftBtn.classList.toggle('arrow-disabled', idx === 0);
-    rightBtn.classList.toggle('arrow-disabled', idx === images[name].length - 1);
+  function updateNav() {
+    leftBtn.classList.toggle("nav-disabled", idx === 0);
+    rightBtn.classList.toggle("nav-disabled", idx === images[name].length - 1);
   }
 
-  updateButtons();
+  updateNav();
 
   leftBtn.addEventListener("click", () => {
     if (idx > 0) {
       idx--;
       imgEl.src = images[name][idx];
       textEl.textContent = descs[name][idx];
-      updateButtons();
+      updateNav();
     }
   });
 
@@ -220,7 +215,7 @@ function showPopup(name) {
       idx++;
       imgEl.src = images[name][idx];
       textEl.textContent = descs[name][idx];
-      updateButtons();
+      updateNav();
     }
   });
 
@@ -238,11 +233,10 @@ window.addEventListener("load", () => {
   const notice = document.createElement("div");
   notice.className = "popup";
   notice.innerHTML = `
-    <div class="popup-content" style="width:420px;">
-      <h2 style="font-size:14px;">장류마을 테마파크는 BF인증 시설입니다.</h2>
-      <p style="font-size:12px;">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
-         시설을 안전하고 편리하게 이용할 수 있도록<br>
-         보장하는 제도입니다.</p>
+    <div class="popup-content" style="width: 420px;">
+      <h2>장류마을 테마파크 시설 대부분은  BF인증 시설입니다.</h2>
+      <p>BF인증은 장애인, 노약자, 임산부 등 사회적 약자가 시설을
+           <br>안전하고 편리하게 이용할 수 있도록 보장하는 제도입니다.</p>
       <button class="close-btn">확인</button>
     </div>
   `;
