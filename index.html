@@ -13,13 +13,11 @@
     height: 100vh;
   }
 
-  /* 지도 전체 스크롤/확대용 컨테이너 */
   .zoom-wrapper {
     width: 100%;
     height: 100%;
     overflow: auto;
     touch-action: pan-x pan-y pinch-zoom;
-    -ms-touch-action: pan-x pan-y pinch-zoom;
   }
 
   .map-container {
@@ -63,14 +61,12 @@
     max-height: 85%;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    overflow: auto;
-    transform: scale(1);
-    transform-origin: center;
-    font-size: 14px; /* 전체 글씨 크기 */
+    overflow: hidden;
+    font-size: 14px;
   }
 
   .popup-content h2 {
-    font-size: 16px; /* 볼드체 제목 크기 */
+    font-size: 16px;
     margin-bottom: 10px;
   }
 
@@ -80,6 +76,8 @@
     border-radius: 6px;
     touch-action: none;
     user-select: none;
+    display: block;
+    margin: 0 auto;
   }
 
   .popup-content p {
@@ -96,6 +94,25 @@
     cursor: pointer;
     font-size: 14px;
   }
+
+  /* 이미지 슬라이드 화살표 */
+  .arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 20px;
+    user-select: none;
+    z-index: 10;
+  }
+  .arrow-btn:active { background: rgba(0,0,0,0.7); }
+  .prev-btn { left: 10px; }
+  .next-btn { right: 10px; }
 </style>
 </head>
 <body>
@@ -165,9 +182,13 @@ function showPopup(name) {
   popup.className = "popup";
   popup.innerHTML = `
     <div class="popup-content">
-      <img src="${images[name][idx]}" alt="${name}">
+      <span class="close-btn">닫기</span>
+      <div style="position: relative;">
+        <img src="${images[name][idx]}" alt="${name}">
+        <button class="arrow-btn prev-btn">&lt;</button>
+        <button class="arrow-btn next-btn">&gt;</button>
+      </div>
       <p>${descs[name][idx]}</p>
-      <button class="close-btn">닫기</button>
     </div>
   `;
   document.body.appendChild(popup);
@@ -175,22 +196,29 @@ function showPopup(name) {
   const imgEl = popup.querySelector("img");
   const textEl = popup.querySelector("p");
   const closeBtn = popup.querySelector(".close-btn");
+  const prevBtn = popup.querySelector(".prev-btn");
+  const nextBtn = popup.querySelector(".next-btn");
 
-  imgEl.addEventListener("click", () => {
-    idx++;
-    if (idx < images[name].length) {
-      imgEl.src = images[name][idx];
-      textEl.textContent = descs[name][idx];
-    }
+  function updatePopup() {
+    imgEl.src = images[name][idx];
+    textEl.textContent = descs[name][idx];
+  }
+
+  prevBtn.addEventListener("click", () => {
+    idx = (idx - 1 + images[name].length) % images[name].length;
+    updatePopup();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    idx = (idx + 1) % images[name].length;
+    updatePopup();
   });
 
   closeBtn.addEventListener("click", () => popup.remove());
 }
 
 document.querySelectorAll(".hotspot").forEach(h => {
-  h.addEventListener("click", () => {
-    showPopup(h.dataset.name);
-  });
+  h.addEventListener("click", () => showPopup(h.dataset.name));
 });
 
 // 자동 안내 팝업
