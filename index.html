@@ -1,236 +1,253 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>BF 인증 지도</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      overflow: hidden;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>행사장 지도</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    overflow: hidden;
+    height: 100vh;
+  }
 
-    .map-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-    }
+  .zoom-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
 
-    .map {
-      width: 100%;
-      height: 100%;
-      transform-origin: center;
-      transition: transform 0.3s ease;
-    }
+  .map-container {
+    position: relative;
+    width: 200%;
+    height: auto;
+  }
 
-    .hotspot {
-      position: absolute;
-      width: 30px;
-      height: 30px;
-      background: red;
-      border-radius: 50%;
-      cursor: pointer;
-      transform: translate(-50%, -50%);
-    }
+  .map-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
 
-    /* 🔹 팝업 (고정된 위치) */
-    .popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      text-align: center;
-      padding: 16px;
-      width: 380px;
-      max-width: 90%;
-      z-index: 1000;
-      display: none;
-    }
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+  }
 
-    .popup img {
-      width: 100%;
-      border-radius: 12px;
-      pointer-events: none;
-      user-select: none;
-    }
+  /* 팝업 */
+  .popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 10px;
+    box-sizing: border-box;
+  }
 
-    .popup p {
-      font-size: 14px;
-      margin-top: 8px;
-      line-height: 1.4;
-    }
+  .popup-content {
+    position: relative;
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 90%;
+    width: 400px; /* 너비 적용 */
+    max-height: 85%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    overflow: auto;
+    transform: scale(1);
+    transform-origin: center;
+    font-size: 12px; /* 글자 크기 줄임 */
+  }
 
-    .popup strong {
-      font-size: 16px;
-    }
+  .popup-content h2 {
+    font-size: 14px; /* 제목 글자 크기 줄임 */
+    margin-bottom: 10px;
+  }
 
-    .popup-close {
-      position: absolute;
-      top: 8px;
-      right: 12px;
-      font-size: 20px;
-      cursor: pointer;
-      color: #333;
-    }
+  .popup-content img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    touch-action: none;
+    user-select: none;
+    margin-bottom: 10px;
+  }
 
-    /* 🔹 화살표 버튼 */
-    .arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 28px;
-      color: rgba(0,0,0,0.6);
-      cursor: pointer;
-      user-select: none;
-    }
-    .arrow:hover {
-      color: #000;
-    }
-    .arrow.left {
-      left: 8px;
-    }
-    .arrow.right {
-      right: 8px;
-    }
+  .popup-content p {
+    margin-top: 5px;
+  }
 
-    /* 🔹 지도 확대 버튼 */
-    .zoom-controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 100;
-    }
+  .close-btn {
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
 
-    .zoom-controls button {
-      background: #0078ff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      width: 40px;
-      height: 40px;
-      font-size: 20px;
-      cursor: pointer;
-    }
-  </style>
+  .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #333;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    padding: 5px 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .arrow.disabled {
+    color: #aaa;
+    cursor: default;
+  }
+  .arrow-left { left: 10px; }
+  .arrow-right { right: 10px; }
+</style>
 </head>
 <body>
 
-  <div class="map-container" id="mapContainer">
-    <img src="map.jpg" alt="지도" class="map" id="mapImage">
+<div class="zoom-wrapper">
+  <div class="map-container">
+    <img src="map.png" alt="행사장 지도">
 
-    <!-- 🔹 핫스팟 예시 -->
-    <div class="hotspot" 
-      style="top: 40%; left: 50%;" 
-      data-images='["spot1.jpg", "spot2.jpg", "spot3.jpg"]'
-      data-description="BF 인증 화장실 위치">
+    <div class="hotspot" data-name="콩이관" style="top:25.4%; left:30.8%; width:6.0%; height:6.0%;"></div>
+    <div class="hotspot" data-name="홍메관" style="top:53.8%; left:45.7%; width:4.0%; height:10%;"></div>
+    <div class="hotspot" data-name="다년생 식물원" style="top:35.0%; left:29.3%; width:4.5%; height:8.0%;"></div>
+    <div class="hotspot" data-name="효모관" style="top:46.0%; left:40.0%; width:4.0%; height:10.0%;"></div>
+    <div class="hotspot" data-name="콩이공원" style="top:58.5%; left:86.3%; width:5%; height:7%;"></div>
+    <div class="hotspot" data-name="팡이공원" style="top:56.8%; left:69.5%; width:5.0%; height:7.0%;"></div>
+    <div class="hotspot" data-name="팡이관" style="top:57.3%; left:40.0%; width:4%; height:8.5%;"></div>
+  </div>
+</div>
+
+<script>
+const images = {
+  "콩이관": ["콩이관1.jpg","콩이관2.jpg","콩이관3.jpg","콩이관4.jpg"],
+  "홍메관": ["홍메관1.jpg","홍메관2.jpg","홍메관3.jpg"],
+  "다년생 식물원": ["다년생식물원1.jpg","다년생식물원2.jpg","다년생식물원3.jpg"],
+  "효모관": ["효모관1.jpg","효모관2.jpg","효모관3.jpg"],
+  "콩이공원": ["콩이공원1.jpg"],
+  "팡이공원": ["팡이공원1.jpg","팡이공원2.jpg"],
+  "팡이관": ["팡이관1.jpg"]
+};
+
+const descs = {
+  "콩이관": [
+    "콩이관 입구: 장애인 전용 길 배치",
+    "실내에 장애인 전용 화장실 배치",
+    "실내에 장애인 전용 엘리베이터 배치",
+    "실내 내부 모습: 지체 장애인을 위한 휠체어가 구비되어 있으며 지체 장애인 모두 시설 이용가능"
+  ],
+  "홍메관": [
+    "(위 건물이 테라포밍관) 테라포밍관은 놀이기구 이용이 어려울 수 있음",
+    "출입구 휠체어로 이용 가능",
+    "출입구 입장 후 좌측에 장애인 전용 화장실"
+  ],
+  "다년생 식물원": [
+    "수목원 내부에 엘리베이터가 설치되어 있어 휠체어로 통행이 편하다",
+    "수목원 내부 1층 왼쪽에 장애인 화장실이 마련되어 있다",
+    "수목원 내부에 1층 왼쪽에 장애인 화장실이 마련되어 있다"
+  ],
+  "효모관": [
+    "고정문 옆 점자 안내도",
+    "입장 후 왼쪽 엘리베이터 설치",
+    "고정문 후 자동문 있음"
+  ],
+  "콩이공원": [
+    "공원 안쪽 길이 포장되어 있지 않아서 비가 오면 땅이 질퍽해져 이동하기 불편함"
+  ],
+  "팡이공원": [
+    "길이 좁고 울퉁불퉁해서 휠체어를 타고 올라가기 어려움",
+    "펜스가 없는 부분이 있어 위험함"
+  ],
+  "팡이관": [
+    "1번 출입구 입장 후 오른쪽에 엘리베이터"
+  ]
+};
+
+function showPopup(name) {
+  let idx = 0;
+  const popup = document.createElement("div");
+  popup.className = "popup";
+  popup.innerHTML = `
+    <div class="popup-content">
+      <img src="${images[name][idx]}" alt="${name}">
+      <p>${descs[name][idx]}</p>
+      <span class="arrow arrow-left disabled">&#8592;</span>
+      <span class="arrow arrow-right ${images[name].length === 1 ? 'disabled' : ''}">&#8594;</span>
+      <button class="close-btn">닫기</button>
     </div>
+  `;
+  document.body.appendChild(popup);
 
-    <div class="hotspot" 
-      style="top: 60%; left: 70%;" 
-      data-images='["spot4.jpg", "spot5.jpg"]'
-      data-description="장애인 전용 주차구역">
-    </div>
-  </div>
+  const imgEl = popup.querySelector("img");
+  const textEl = popup.querySelector("p");
+  const leftArrow = popup.querySelector(".arrow-left");
+  const rightArrow = popup.querySelector(".arrow-right");
+  const closeBtn = popup.querySelector(".close-btn");
 
-  <!-- 🔹 첫 팝업 -->
-  <div class="popup" id="infoPopup">
-    <span class="popup-close" id="popupClose">&times;</span>
-    <p><strong>장류마을 테마파크는 BF인증 시설입니다.</strong><br>
-    BF인증은 장애인, 노약자, 임산부 등 사회적 약자가 시설을 안전하고 편리하게 이용할 수 있도록 보장하는 제도입니다.</p>
-  </div>
+  function updateArrows() {
+    leftArrow.classList.toggle("disabled", idx === 0);
+    rightArrow.classList.toggle("disabled", idx === images[name].length - 1);
+  }
 
-  <!-- 🔹 지도 확대 버튼 -->
-  <div class="zoom-controls">
-    <button id="zoomIn">+</button>
-    <button id="zoomOut">−</button>
-  </div>
-
-  <script>
-    const map = document.getElementById('mapImage');
-    const hotspots = document.querySelectorAll('.hotspot');
-    const popup = document.getElementById('infoPopup');
-    const popupClose = document.getElementById('popupClose');
-
-    let scale = 1;
-    let currentIndex = 0;
-    let images = [];
-
-    // 🔹 지도 확대/축소
-    document.getElementById('zoomIn').onclick = () => {
-      scale += 0.2;
-      map.style.transform = `scale(${scale})`;
-    };
-    document.getElementById('zoomOut').onclick = () => {
-      scale = Math.max(1, scale - 0.2);
-      map.style.transform = `scale(${scale})`;
-    };
-
-    // 🔹 첫 팝업 표시
-    window.onload = () => {
-      popup.style.display = 'block';
-    };
-
-    // 🔹 팝업 닫기
-    popupClose.onclick = () => {
-      popup.style.display = 'none';
-    };
-
-    // 🔹 핫스팟 클릭 시 팝업 표시
-    hotspots.forEach(hotspot => {
-      hotspot.addEventListener('click', () => {
-        images = JSON.parse(hotspot.getAttribute('data-images'));
-        const desc = hotspot.getAttribute('data-description');
-        currentIndex = 0;
-        showImage(desc);
-      });
-    });
-
-    // 🔹 이미지 표시 함수
-    function showImage(desc) {
-      const imgSrc = images[currentIndex];
-
-      popup.innerHTML = `
-        <span class="popup-close" id="popupClose">&times;</span>
-        <span class="arrow left" id="prevArrow">&#10094;</span>
-        <img src="${imgSrc}" alt="">
-        <span class="arrow right" id="nextArrow">&#10095;</span>
-        <p>${desc}</p>
-      `;
-
-      popup.style.display = 'block';
-
-      // 닫기 이벤트
-      document.getElementById('popupClose').onclick = () => popup.style.display = 'none';
-
-      // 이전/다음 이동
-      const prev = document.getElementById('prevArrow');
-      const next = document.getElementById('nextArrow');
-
-      prev.style.opacity = currentIndex === 0 ? '0.3' : '1';
-      next.style.opacity = currentIndex === images.length - 1 ? '0.3' : '1';
-
-      prev.onclick = () => {
-        if (currentIndex > 0) {
-          currentIndex--;
-          showImage(desc);
-        }
-      };
-
-      next.onclick = () => {
-        if (currentIndex < images.length - 1) {
-          currentIndex++;
-          showImage(desc);
-        }
-      };
+  leftArrow.addEventListener("click", () => {
+    if (idx > 0) {
+      idx--;
+      imgEl.src = images[name][idx];
+      textEl.textContent = descs[name][idx];
+      updateArrows();
     }
-  </script>
+  });
+
+  rightArrow.addEventListener("click", () => {
+    if (idx < images[name].length - 1) {
+      idx++;
+      imgEl.src = images[name][idx];
+      textEl.textContent = descs[name][idx];
+      updateArrows();
+    }
+  });
+
+  updateArrows();
+  closeBtn.addEventListener("click", () => popup.remove());
+}
+
+document.querySelectorAll(".hotspot").forEach(h => {
+  h.addEventListener("click", () => {
+    showPopup(h.dataset.name);
+  });
+});
+
+// 자동 안내 팝업
+window.addEventListener("load", () => {
+  const notice = document.createElement("div");
+  notice.className = "popup";
+  notice.innerHTML = `
+    <div class="popup-content" style="width:400px;">
+      <h2 style="font-size:14px;">장류마을 테마파크 시설 대부분은 BF인증 시설입니다.</h2>
+      <p style="font-size:12px;">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가 시설을<br>
+                                       안전하고 편리하게 이용오전 11:10 2025-10-16할 수 있도록 보장하는 제도입니다.</p>
+      <button class="close-btn">확인</button>
+    </div>
+  `;
+  document.body.appendChild(notice);
+  notice.querySelector(".close-btn").addEventListener("click", () => notice.remove());
+});
+</script>
 </body>
 </html>
