@@ -17,18 +17,15 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .map-container {
     position: relative;
     width: 200%;
-    height: auto;
   }
 
   .map-container img {
     width: 100%;
-    height: auto;
     display: block;
   }
 
@@ -60,17 +57,15 @@
     border-radius: 16px;
     text-align: center;
     max-width: 90%;
-    width: 400px; /* 너비 적용 */
+    width: 400px;
     max-height: 85%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     overflow: auto;
-    transform: scale(1);
-    transform-origin: center;
-    font-size: 12px; /* 글자 크기 줄임 */
+    font-size: 12px;
   }
 
   .popup-content h2 {
-    font-size: 14px; /* 제목 글자 크기 줄임 */
+    font-size: 14px;
     margin-bottom: 10px;
   }
 
@@ -78,7 +73,6 @@
     width: 100%;
     height: auto;
     border-radius: 6px;
-    touch-action: none;
     user-select: none;
     margin-bottom: 10px;
   }
@@ -110,10 +104,12 @@
     cursor: pointer;
     user-select: none;
   }
+
   .arrow.disabled {
     color: #aaa;
     cursor: default;
   }
+
   .arrow-left { left: 10px; }
   .arrow-right { right: 10px; }
 </style>
@@ -206,6 +202,7 @@ function showPopup(name) {
   }
 
   leftArrow.addEventListener("click", () => {
+    if (leftArrow.classList.contains('disabled')) return;
     if (idx > 0) {
       idx--;
       imgEl.src = images[name][idx];
@@ -215,6 +212,7 @@ function showPopup(name) {
   });
 
   rightArrow.addEventListener("click", () => {
+    if (rightArrow.classList.contains('disabled')) return;
     if (idx < images[name].length - 1) {
       idx++;
       imgEl.src = images[name][idx];
@@ -238,10 +236,10 @@ window.addEventListener("load", () => {
   const notice = document.createElement("div");
   notice.className = "popup";
   notice.innerHTML = `
-    <div class="popup-content" style="width:400px;">
-      <h2 style="font-size:14px;">장류마을 테마파크 시설 대부분은 BF인증 시설입니다.</h2>
-      <p style="font-size:12px;">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가 시설을<br>
-                                       안전하고 편리하게 이용 할 수 있도록 보장하는 제도입니다.</p>
+    <div class="popup-content">
+      <h2>장류마을 테마파크 시설 대부분은 BF인증 시설입니다.</h2>
+      <p>BF인증은 장애인, 노약자, 임산부 등 사회적 약자가 시설을<br>
+         안전하고 편리하게 이용 할 수 있도록 보장하는 제도입니다.</p>
       <button class="close-btn">확인</button>
     </div>
   `;
