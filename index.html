@@ -1,106 +1,120 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>행사장 지도</title>
 <style>
-body {
-  margin:0;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-  height: 100vh;
-  background:#f9f9f9;
-}
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-/* 지도 스크롤/확대 */
-.zoom-wrapper {
-  width:100%;
-  height:100%;
-  overflow:auto;
-  touch-action: pan-x pan-y pinch-zoom;
-}
+  /* 지도 전체 스크롤/확대용 컨테이너 */
+  .zoom-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    touch-action: pan-x pan-y pinch-zoom;
+    -ms-touch-action: pan-x pan-y pinch-zoom;
+  }
 
-.map-container {
-  position:relative;
-  width:200%;
-  height:auto;
-}
+  .map-container {
+    position: relative;
+    width: 200%;
+    height: auto;
+  }
 
-.map-container img {
-  width:100%;
-  height:auto;
-  display:block;
-}
+  .map-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
 
-.hotspot {
-  position:absolute;
-  cursor:pointer;
-}
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+  }
 
-/* 팝업 */
-.popup {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background: rgba(0,0,0,0.7);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-}
+  /* 팝업 */
+  .popup {
+    position: fixed; /* body에 붙어 지도와 독립 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 10px;
+    box-sizing: border-box;
+  }
 
-.popup-content {
-  background:#fff;
-  border-radius:16px;
-  padding:20px;
-  width:400px;
-  max-width:90%;
-  max-height:85%;
-  overflow:hidden;
-  text-align:center;
-  font-size:12px;
-  position:relative;
-}
+  .popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 90%;
+    width: 450px;
+    max-height: 85%;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    overflow: hidden;
+    font-size: 14px;
+  }
 
-.popup-content h2 {
-  font-size:14px;
-  margin-bottom:10px;
-}
+  .popup-content h2 {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
 
-.popup-content img {
-  display:block;
-  width:100%;
-  height:auto;
-  border-radius:6px;
-  touch-action:none;
-  user-select:none;
-  margin-bottom:10px;
-}
+  .popup-content img {
+    width: 100%;
+    height: auto;
+    max-height: 60vh;
+    border-radius: 6px;
+    touch-action: none; /* 확대 방지 */
+    user-select: none;
+    display: block;
+    margin: 0 auto;
+  }
 
-.popup-content p {
-  margin-top:0;
-}
+  .popup-content p {
+    margin-top: 10px;
+  }
 
-/* 버튼 */
-.close-btn, .prev-btn, .next-btn {
-  padding:6px 12px;
-  border:none;
-  border-radius:4px;
-  cursor:pointer;
-  font-size:12px;
-}
+  .close-btn {
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
 
-.close-btn { background:#333; color:#fff; margin-top:5px; }
-.prev-btn, .next-btn { background:#555; color:#fff; position:absolute; top:50%; transform:translateY(-50%); }
-.prev-btn { left:-40px; }
-.next-btn { right:-40px; }
-
-/* 비활성 버튼 색 */
-.disabled { background:#999; cursor:not-allowed; }
-
+  .arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(50,50,50,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .arrow-left { left: 10px; }
+  .arrow-right { right: 10px; }
+  .disabled { background: rgba(150,150,150,0.6); cursor: default; }
 </style>
 </head>
 <body>
@@ -108,87 +122,134 @@ body {
 <div class="zoom-wrapper">
   <div class="map-container">
     <img src="map.png" alt="행사장 지도">
-    <div class="hotspot" data-name="콩이관" style="top:25.4%; left:30.8%; width:6%; height:6%;"></div>
-    <div class="hotspot" data-name="홍메관" style="top:53.8%; left:45.7%; width:4%; height:10%;"></div>
-    <div class="hotspot" data-name="다년생 식물원" style="top:35%; left:29.3%; width:4.5%; height:8%;"></div>
-    <div class="hotspot" data-name="효모관" style="top:46%; left:40%; width:4%; height:10%;"></div>
+
+    <div class="hotspot" data-name="콩이관" style="top:25.4%; left:30.8%; width:6.0%; height:6.0%;"></div>
+    <div class="hotspot" data-name="홍메관" style="top:53.8%; left:45.7%; width:4.0%; height:10%;"></div>
+    <div class="hotspot" data-name="다년생 식물원" style="top:35.0%; left:29.3%; width:4.5%; height:8.0%;"></div>
+    <div class="hotspot" data-name="효모관" style="top:46.0%; left:40.0%; width:4.0%; height:10.0%;"></div>
     <div class="hotspot" data-name="콩이공원" style="top:58.5%; left:86.3%; width:5%; height:7%;"></div>
-    <div class="hotspot" data-name="팡이공원" style="top:56.8%; left:69.5%; width:5%; height:7%;"></div>
-    <div class="hotspot" data-name="팡이관" style="top:57.3%; left:40%; width:4%; height:8.5%;"></div>
+    <div class="hotspot" data-name="팡이공원" style="top:56.8%; left:69.5%; width:5.0%; height:7.0%;"></div>
+    <div class="hotspot" data-name="팡이관" style="top:57.3%; left:40.0%; width:4%; height:8.5%;"></div>
   </div>
 </div>
 
 <script>
 const images = {
-  "콩이관":["콩이관1.jpg","콩이관2.jpg","콩이관3.jpg","콩이관4.jpg"],
-  "홍메관":["홍메관1.jpg","홍메관2.jpg","홍메관3.jpg"],
-  "다년생 식물원":["다년생식물원1.jpg","다년생식물원2.jpg","다년생식물원3.jpg"],
-  "효모관":["효모관1.jpg","효모관2.jpg","효모관3.jpg"],
-  "콩이공원":["콩이공원1.jpg"],
-  "팡이공원":["팡이공원1.jpg","팡이공원2.jpg"],
-  "팡이관":["팡이관1.jpg"]
+  "콩이관": ["콩이관1.jpg","콩이관2.jpg","콩이관3.jpg","콩이관4.jpg"],
+  "홍메관": ["홍메관1.jpg","홍메관2.jpg","홍메관3.jpg"],
+  "다년생 식물원": ["다년생식물원1.jpg","다년생식물원2.jpg","다년생식물원3.jpg"],
+  "효모관": ["효모관1.jpg","효모관2.jpg","효모관3.jpg"],
+  "콩이공원": ["콩이공원1.jpg"],
+  "팡이공원": ["팡이공원1.jpg","팡이공원2.jpg"],
+  "팡이관": ["팡이관1.jpg"]
 };
 
 const descs = {
-  "콩이관":["콩이관 입구: 장애인 전용 길 배치","실내에 장애인 전용 화장실 배치","실내에 장애인 전용 엘리베이터 배치","실내 내부 모습: 지체 장애인을 위한 휠체어 구비"],
-  "홍메관":["테라포밍관은 놀이기구 이용 어려움","출입구 휠체어 가능","출입구 좌측 장애인 화장실"],
-  "다년생 식물원":["엘리베이터 설치, 휠체어 통행 편리","1층 왼쪽 장애인 화장실","1층 왼쪽 장애인 화장실"],
-  "효모관":["고정문 옆 점자 안내도","입장 후 왼쪽 엘리베이터","고정문 후 자동문 있음"],
-  "콩이공원":["포장되지 않은 길, 비 올 시 이동 불편"],
-  "팡이공원":["길 좁고 울퉁불퉁, 휠체어 어려움","펜스 없는 부분 위험"],
-  "팡이관":["1번 출입구 입장 후 오른쪽 엘리베이터"]
+  "콩이관": [
+    "콩이관 입구: 장애인 전용 길 배치",
+    "실내에 장애인 전용 화장실 배치",
+    "실내에 장애인 전용 엘리베이터 배치",
+    "실내 내부 모습: 지체 장애인을 위한 휠체어가 구비되어 있으며 지체 장애인 모두 시설 이용가능"
+  ],
+  "홍메관": [
+    "(위 건물이 테라포밍관) 테라포밍관은 놀이기구 이용이 어려울 수 있음",
+    "출입구 휠체어로 이용 가능",
+    "출입구 입장 후 좌측에 장애인 전용 화장실"
+  ],
+  "다년생 식물원": [
+    "수목원 내부에 엘리베이터가 설치되어 있어 휠체어로 통행이 편하다",
+    "수목원 내부 1층 왼쪽에 장애인 화장실이 마련되어 있다",
+    "수목원 내부에 1층 왼쪽에 장애인 화장실이 마련되어 있다"
+  ],
+  "효모관": [
+    "고정문 옆 점자 안내도",
+    "입장 후 왼쪽 엘리베이터 설치",
+    "고정문 후 자동문 있음"
+  ],
+  "콩이공원": [
+    "공원 안쪽 길이 포장되어 있지 않아서 비가 오면 땅이 질퍽해져 이동하기 불편함"
+  ],
+  "팡이공원": [
+    "길이 좁고 울퉁불퉁해서 휠체어를 타고 올라가기 어려움",
+    "펜스가 없는 부분이 있어 위험함"
+  ],
+  "팡이관": [
+    "1번 출입구 입장 후 오른쪽에 엘리베이터"
+  ]
 };
 
-// 팝업 생성
-function showPopup(name){
-  let idx=0;
-  const popup=document.createElement("div");
-  popup.className="popup";
-  popup.innerHTML=`
-    <div class="popup-content">
-      <h2>${name}</h2>
-      <img src="${images[name][idx]}" alt="${name}">
-      <p>${descs[name][idx]}</p>
-      <button class="prev-btn disabled">&#8592;</button>
-      <button class="next-btn ${images[name].length>1?'':'disabled'}">&#8594;</button>
-      <button class="close-btn">닫기</button>
-    </div>
-  `;
-  document.body.appendChild(popup);
+function showPopup(name) {
+  let idx = 0;
 
-  const imgEl = popup.querySelector("img");
-  const textEl = popup.querySelector("p");
-  const prevBtn = popup.querySelector(".prev-btn");
-  const nextBtn = popup.querySelector(".next-btn");
-  const closeBtn = popup.querySelector(".close-btn");
+  const popup = document.createElement("div");
+  popup.className = "popup";
 
-  function updateButtons(){
-    prevBtn.classList.toggle("disabled", idx===0);
-    nextBtn.classList.toggle("disabled", idx===images[name].length-1);
+  const content = document.createElement("div");
+  content.className = "popup-content";
+
+  const img = document.createElement("img");
+  img.src = images[name][idx];
+
+  const text = document.createElement("p");
+  text.textContent = descs[name][idx];
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "close-btn";
+  closeBtn.textContent = "닫기";
+  closeBtn.addEventListener("click", () => popup.remove());
+
+  const leftBtn = document.createElement("button");
+  leftBtn.className = "arrow-btn arrow-left disabled";
+  leftBtn.textContent = "<";
+  leftBtn.addEventListener("click", () => {
+    if (idx > 0) {
+      idx--;
+      img.src = images[name][idx];
+      text.textContent = descs[name][idx];
+      updateArrows();
+    }
+  });
+
+  const rightBtn = document.createElement("button");
+  rightBtn.className = "arrow-btn arrow-right";
+  rightBtn.textContent = ">";
+  rightBtn.addEventListener("click", () => {
+    if (idx < images[name].length - 1) {
+      idx++;
+      img.src = images[name][idx];
+      text.textContent = descs[name][idx];
+      updateArrows();
+    }
+  });
+
+  function updateArrows() {
+    leftBtn.classList.toggle("disabled", idx === 0);
+    rightBtn.classList.toggle("disabled", idx === images[name].length - 1);
   }
 
-  prevBtn.addEventListener("click", ()=>{
-    if(idx>0){ idx--; imgEl.src=images[name][idx]; textEl.textContent=descs[name][idx]; updateButtons();}
-  });
+  updateArrows();
 
-  nextBtn.addEventListener("click", ()=>{
-    if(idx<images[name].length-1){ idx++; imgEl.src=images[name][idx]; textEl.textContent=descs[name][idx]; updateButtons();}
-  });
+  content.appendChild(closeBtn);
+  content.appendChild(img);
+  content.appendChild(text);
+  content.appendChild(leftBtn);
+  content.appendChild(rightBtn);
 
-  closeBtn.addEventListener("click", ()=>popup.remove());
-  updateButtons();
+  popup.appendChild(content);
+  document.body.appendChild(popup);
 }
 
-// 핫스팟 클릭 이벤트
-document.querySelectorAll(".hotspot").forEach(h=>{
-  h.addEventListener("click", ()=>showPopup(h.dataset.name));
+document.querySelectorAll(".hotspot").forEach(h => {
+  h.addEventListener("click", () => {
+    showPopup(h.dataset.name);
+  });
 });
 
-// 처음 뜨는 안내 팝업
-window.addEventListener("load", ()=>{
-  const notice=document.createElement("div");
-  notice.className="popup";
-  notice.innerHTML=`
+// 자동 안내 팝업
+window.addEventListener("load", () => {
+  const notice = document.createElement("div");
+  notice.className = "popup";
+  notice.innerHTML = `
     <div class="popup-content">
       <h2 style="font-size:14px;">장류마을 테마파크는 BF인증 시설입니다.</h2>
       <p style="font-size:12px;">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
@@ -198,7 +259,7 @@ window.addEventListener("load", ()=>{
     </div>
   `;
   document.body.appendChild(notice);
-  notice.querySelector(".close-btn").addEventListener("click", ()=>notice.remove());
+  notice.querySelector(".close-btn").addEventListener("click", () => notice.remove());
 });
 </script>
 </body>
