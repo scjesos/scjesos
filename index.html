@@ -18,6 +18,7 @@
     height: 100%;
     overflow: auto;
     touch-action: pan-x pan-y pinch-zoom;
+    -ms-touch-action: pan-x pan-y pinch-zoom;
   }
 
   .map-container {
@@ -37,6 +38,7 @@
     cursor: pointer;
   }
 
+  /* 팝업 */
   .popup {
     position: fixed;
     top: 0;
@@ -53,20 +55,23 @@
   }
 
   .popup-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 95%;
-    max-height: 85%;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    overflow: hidden;
-    font-size: 14px;
     position: relative;
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    width: 400px;        /* 기본 너비 설정 */
+    max-width: 90%;      /* 화면이 좁으면 최대 90% */
+    max-height: 85%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    overflow: auto;
+    transform: scale(1);
+    transform-origin: center;
+    font-size: 14px;
   }
 
   .popup-content h2 {
-    font-size: 14px;
+    font-size: 14px; /* 볼드체 제목 크기 줄임 */
     margin-bottom: 10px;
   }
 
@@ -76,58 +81,21 @@
     border-radius: 6px;
     touch-action: none;
     user-select: none;
-    display: block;
-    margin: 0 auto;
   }
 
   .popup-content p {
-    font-size: 12px;
     margin-top: 10px;
   }
 
   .close-btn {
     margin-top: 10px;
-    padding: 10px 16px;
+    padding: 6px 12px;
     background: #333;
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-  }
-
-  /* 화살표 버튼 */
-  .arrow-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    border: none;
-    padding: 20px;
-    cursor: pointer;
-    border-radius: 50%;
-    font-size: 24px;
-    user-select: none;
-    z-index: 10;
-  }
-
-  .arrow-btn:disabled {
-    background: rgba(150,150,150,0.5);
-    cursor: default;
-  }
-
-  .prev-btn { left: -40px; }   /* 이미지 바깥쪽으로 이동 */
-  .next-btn { right: -40px; }  /* 이미지 바깥쪽으로 이동 */
-
-  /* 모바일 터치 시 클릭 영역 확대 */
-  @media (max-width: 600px) {
-    .arrow-btn {
-      padding: 28px;
-      font-size: 32px;
-    }
-    .prev-btn { left: -50px; }
-    .next-btn { right: -50px; }
   }
 </style>
 </head>
@@ -198,13 +166,9 @@ function showPopup(name) {
   popup.className = "popup";
   popup.innerHTML = `
     <div class="popup-content">
-      <span class="close-btn">닫기</span>
-      <div style="position: relative;">
-        <img src="${images[name][idx]}" alt="${name}">
-        <button class="arrow-btn prev-btn">&lt;</button>
-        <button class="arrow-btn next-btn">&gt;</button>
-      </div>
+      <img src="${images[name][idx]}" alt="${name}">
       <p>${descs[name][idx]}</p>
+      <button class="close-btn">닫기</button>
     </div>
   `;
   document.body.appendChild(popup);
@@ -212,30 +176,22 @@ function showPopup(name) {
   const imgEl = popup.querySelector("img");
   const textEl = popup.querySelector("p");
   const closeBtn = popup.querySelector(".close-btn");
-  const prevBtn = popup.querySelector(".prev-btn");
-  const nextBtn = popup.querySelector(".next-btn");
 
-  function updatePopup() {
-    imgEl.src = images[name][idx];
-    textEl.textContent = descs[name][idx];
-    prevBtn.disabled = idx === 0;
-    nextBtn.disabled = idx === images[name].length - 1;
-  }
-
-  prevBtn.addEventListener("click", () => {
-    if (idx > 0) { idx--; updatePopup(); }
-  });
-
-  nextBtn.addEventListener("click", () => {
-    if (idx < images[name].length - 1) { idx++; updatePopup(); }
+  imgEl.addEventListener("click", () => {
+    idx++;
+    if (idx < images[name].length) {
+      imgEl.src = images[name][idx];
+      textEl.textContent = descs[name][idx];
+    }
   });
 
   closeBtn.addEventListener("click", () => popup.remove());
-  updatePopup();
 }
 
 document.querySelectorAll(".hotspot").forEach(h => {
-  h.addEventListener("click", () => showPopup(h.dataset.name));
+  h.addEventListener("click", () => {
+    showPopup(h.dataset.name);
+  });
 });
 
 // 자동 안내 팝업
@@ -244,7 +200,7 @@ window.addEventListener("load", () => {
   notice.className = "popup";
   notice.innerHTML = `
     <div class="popup-content">
-      <h2>장류마을 테마파크 시설 대부분은 BF인증 시설입니다.</h2>
+      <h2>장류마을 테마파크는 BF인증 시설입니다.</h2>
       <p>BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
          시설을 안전하고 편리하게 이용할 수 있도록<br>
          보장하는 제도입니다.</p>
