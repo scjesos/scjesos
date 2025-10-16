@@ -39,7 +39,7 @@
 
   /* 팝업 */
   .popup {
-    position:fixed; /* 화면 고정 */
+    position:fixed;
     top:0; left:0;
     width:100%; height:100%;
     background: rgba(0,0,0,0.7);
@@ -67,10 +67,10 @@
   }
 
   .popup-content img {
-    width:100%;        /* 팝업 안에서만 크기 고정 */
+    width:100%;
     height:auto;
     border-radius:6px;
-    touch-action:none; /* 확대 금지 */
+    touch-action:none;
     user-select:none;
   }
 
@@ -97,23 +97,42 @@
   <div class="map-container">
     <img src="map.png" alt="행사장 지도">
 
-    <!-- 예시 핫스팟 -->
+    <!-- 핫스팟 -->
     <div class="hotspot" data-name="콩이관" style="top:25.4%; left:30.8%; width:6%; height:6%;"></div>
+    <div class="hotspot" data-name="홍메관" style="top:53.8%; left:45.7%; width:4%; height:10%;"></div>
+    <div class="hotspot" data-name="다년생 식물원" style="top:35%; left:29.3%; width:4.5%; height:8%;"></div>
+    <div class="hotspot" data-name="효모관" style="top:46%; left:40%; width:4%; height:10%;"></div>
+    <div class="hotspot" data-name="콩이공원" style="top:58.5%; left:86.3%; width:5%; height:7%;"></div>
+    <div class="hotspot" data-name="팡이공원" style="top:56.8%; left:69.5%; width:5%; height:7%;"></div>
+    <div class="hotspot" data-name="팡이관" style="top:57.3%; left:40%; width:4%; height:8.5%;"></div>
   </div>
 </div>
 
 <script>
+// 각 시설별 이미지 및 설명
 const images = {
-  "콩이관":["콩이관1.jpg","콩이관2.jpg","콩이관3.jpg"]
-};
-const descs = {
-  "콩이관":["입구: 장애인 전용 길 배치","실내에 장애인 전용 화장실","실내에 장애인 전용 엘리베이터"]
+  "콩이관":["콩이관1.jpg","콩이관2.jpg","콩이관3.jpg","콩이관4.jpg"],
+  "홍메관":["홍메관1.jpg","홍메관2.jpg","홍메관3.jpg"],
+  "다년생 식물원":["다년생식물원1.jpg","다년생식물원2.jpg","다년생식물원3.jpg"],
+  "효모관":["효모관1.jpg","효모관2.jpg","효모관3.jpg"],
+  "콩이공원":["콩이공원1.jpg"],
+  "팡이공원":["팡이공원1.jpg","팡이공원2.jpg"],
+  "팡이관":["팡이관1.jpg"]
 };
 
-// 핫스팟 클릭 팝업
+const descs = {
+  "콩이관":["입구: 장애인 전용 길 배치","실내에 장애인 전용 화장실","실내에 장애인 전용 엘리베이터","실내 내부 모습: 휠체어 구비"],
+  "홍메관":["테라포밍관 이용 어려움","출입구 휠체어 이용 가능","출입구 좌측 장애인 화장실"],
+  "다년생 식물원":["엘리베이터 설치로 휠체어 통행 편함","1층 왼쪽 장애인 화장실","1층 왼쪽 장애인 화장실"],
+  "효모관":["고정문 옆 점자 안내도","입장 후 왼쪽 엘리베이터","고정문 후 자동문 있음"],
+  "콩이공원":["길이 포장되지 않아 비 올 시 이동 어려움"],
+  "팡이공원":["길 좁고 울퉁불퉁","펜스 없는 구간 위험"],
+  "팡이관":["1번 출입구 오른쪽 엘리베이터"]
+};
+
+// 팝업 생성 함수
 function showPopup(name){
   let idx=0;
-
   const popup=document.createElement("div");
   popup.className="popup";
 
@@ -167,6 +186,7 @@ function showPopup(name){
   content.appendChild(text);
   content.appendChild(leftBtn);
   content.appendChild(rightBtn);
+
   popup.appendChild(content);
   document.body.appendChild(popup);
 }
