@@ -13,6 +13,7 @@
     height: 100vh;
   }
 
+  /* 지도 전체 스크롤/확대용 컨테이너 */
   .zoom-wrapper {
     width: 100%;
     height: 100%;
@@ -39,7 +40,7 @@
 
   /* 팝업 */
   .popup {
-    position: fixed;
+    position: fixed; /* 지도 확대와 무관하게 고정 */
     top: 0;
     left: 0;
     width: 100%;
@@ -55,22 +56,20 @@
 
   .popup-content {
     position: relative;
-    background: white;
+    background: #fff;
     padding: 20px;
     border-radius: 16px;
     text-align: center;
+    width: 400px; /* 고정 폭 */
     max-width: 90%;
-    width: 400px; /* 너비 적용 */
     max-height: 85%;
+    overflow: hidden;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    overflow: auto;
-    transform: scale(1);
-    transform-origin: center;
-    font-size: 12px; /* 글자 크기 줄임 */
+    font-size: 14px;
   }
 
   .popup-content h2 {
-    font-size: 14px; /* 제목 글자 크기 줄임 */
+    font-size: 14px; /* 제목 글자 작게 */
     margin-bottom: 10px;
   }
 
@@ -78,13 +77,12 @@
     width: 100%;
     height: auto;
     border-radius: 6px;
-    touch-action: none;
+    touch-action: none; /* 확대 방지 */
     user-select: none;
-    margin-bottom: 10px;
   }
 
   .popup-content p {
-    margin-top: 5px;
+    margin-top: 10px;
   }
 
   .close-btn {
@@ -95,27 +93,28 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
   }
 
-  .arrow {
+  /* 이전/다음 버튼 */
+  .arrow-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     font-size: 24px;
-    color: #333;
+    color: #888;
     background: rgba(255,255,255,0.7);
+    border: none;
     border-radius: 50%;
-    padding: 5px 10px;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
-    user-select: none;
   }
-  .arrow.disabled {
-    color: #aaa;
-    cursor: default;
-  }
+
   .arrow-left { left: 10px; }
   .arrow-right { right: 10px; }
+
+  .arrow-disabled { color: #ccc; cursor: default; }
 </style>
 </head>
 <body>
@@ -185,45 +184,46 @@ function showPopup(name) {
   popup.className = "popup";
   popup.innerHTML = `
     <div class="popup-content">
+      <span class="close-btn">닫기</span>
       <img src="${images[name][idx]}" alt="${name}">
       <p>${descs[name][idx]}</p>
-      <span class="arrow arrow-left disabled">&#8592;</span>
-      <span class="arrow arrow-right ${images[name].length === 1 ? 'disabled' : ''}">&#8594;</span>
-      <button class="close-btn">닫기</button>
+      <button class="arrow-btn arrow-left arrow-disabled">&#8592;</button>
+      <button class="arrow-btn arrow-right ${images[name].length === 1 ? 'arrow-disabled' : ''}">&#8594;</button>
     </div>
   `;
   document.body.appendChild(popup);
 
   const imgEl = popup.querySelector("img");
   const textEl = popup.querySelector("p");
-  const leftArrow = popup.querySelector(".arrow-left");
-  const rightArrow = popup.querySelector(".arrow-right");
   const closeBtn = popup.querySelector(".close-btn");
+  const leftBtn = popup.querySelector(".arrow-left");
+  const rightBtn = popup.querySelector(".arrow-right");
 
-  function updateArrows() {
-    leftArrow.classList.toggle("disabled", idx === 0);
-    rightArrow.classList.toggle("disabled", idx === images[name].length - 1);
+  function updateButtons() {
+    leftBtn.classList.toggle('arrow-disabled', idx === 0);
+    rightBtn.classList.toggle('arrow-disabled', idx === images[name].length - 1);
   }
 
-  leftArrow.addEventListener("click", () => {
+  updateButtons();
+
+  leftBtn.addEventListener("click", () => {
     if (idx > 0) {
       idx--;
       imgEl.src = images[name][idx];
       textEl.textContent = descs[name][idx];
-      updateArrows();
+      updateButtons();
     }
   });
 
-  rightArrow.addEventListener("click", () => {
+  rightBtn.addEventListener("click", () => {
     if (idx < images[name].length - 1) {
       idx++;
       imgEl.src = images[name][idx];
       textEl.textContent = descs[name][idx];
-      updateArrows();
+      updateButtons();
     }
   });
 
-  updateArrows();
   closeBtn.addEventListener("click", () => popup.remove());
 }
 
@@ -238,10 +238,11 @@ window.addEventListener("load", () => {
   const notice = document.createElement("div");
   notice.className = "popup";
   notice.innerHTML = `
-    <div class="popup-content" style="width:400px;">
+    <div class="popup-content" style="width:420px;">
       <h2 style="font-size:14px;">장류마을 테마파크는 BF인증 시설입니다.</h2>
-      <p style="font-size:12px;">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가 시설을<br>
-                                       안전하고 편리하게 이용할 수 있도록 보장하는 제도입니다.</p>
+      <p style="font-size:12px;">BF인증은 장애인, 노약자, 임산부 등 사회적 약자가<br>
+         시설을 안전하고 편리하게 이용할 수 있도록<br>
+         보장하는 제도입니다.</p>
       <button class="close-btn">확인</button>
     </div>
   `;
